@@ -42,13 +42,6 @@ class MainActivity : AppCompatActivity() {
             it.setDisplayHomeAsUpEnabled(true)
             it.setHomeAsUpIndicator(R.drawable.home)
         }
-        txtList.add("S对方水电费")
-        txtList.add("S对方水电费")
-        txtList.add("S对方水电费")
-        txtList.add("S对方水电费")
-
-        Log.i(Tag,"onCreate")
-
         val adapter = object : AuToLineAdapter(txtList){
             override fun getView(parent: ViewGroup, data: ArrayList<String>, position: Int): View {
                 val view  = LayoutInflater.from(this@MainActivity).inflate(R.layout.txtlayout,parent,false)
@@ -57,7 +50,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
         group_main.setAdapter(adapter)
-
         getMessage()
         edText_main.setOnEditorActionListener { _, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_SEND || (event != null && event.keyCode == KeyEvent.KEYCODE_ENTER)) {
@@ -66,6 +58,7 @@ class MainActivity : AppCompatActivity() {
                 adapter.change(txtList)
                 group_main.dataChange()
                 getMessage()
+                edText_main.setText("")
                 drawerLayout.closeDrawer(GravityCompat.START)
                 return@setOnEditorActionListener false
             }
