@@ -1,20 +1,21 @@
 package com.example.myweatherapp
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.*
 import android.view.inputmethod.EditorInfo
+import androidx.core.content.contentValuesOf
 import androidx.core.view.GravityCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.example.myweatherapp.adapter.RecyclerViewAdapter
-import com.example.myweatherapp.common.Tag
 import com.example.myweatherapp.common.getJson
 import com.example.myweatherapp.common.getSky
 import com.example.myweatherapp.data.AllDay
 import com.example.myweatherapp.data.DaysData
 import com.example.myweatherapp.data.Weather
+import com.example.myweatherapp.database.MyDatabaseHelper
 import com.example.weatherapp.adapter.AuToLineAdapter
 import com.example.weatherapp.adapter.MyLayoutManager
 import kotlinx.android.synthetic.main.activity_main.*
@@ -28,7 +29,7 @@ import kotlin.collections.ArrayList
 
 class MainActivity : AppCompatActivity() {
 
-    private var url: String = "https://widget.cifuwu.com/weather/"
+    private var url: String = "https://widget.cifuwu.com/weather"
     private val weatherList = ArrayList<AllDay>()
     private val daysList = ArrayList<DaysData>()
     private val txtList = ArrayList<String>()
@@ -42,18 +43,41 @@ class MainActivity : AppCompatActivity() {
             it.setDisplayHomeAsUpEnabled(true)
             it.setHomeAsUpIndicator(R.drawable.home)
         }
-        val adapter = object : AuToLineAdapter(txtList){
+
+        val dbHelper = MyDatabaseHelper(this, "city.db", 1)
+        dbHelper.writableDatabase
+        getMessage()
+        val adapter = object : AuToLineAdapter(txtList) {
             override fun getView(parent: ViewGroup, data: ArrayList<String>, position: Int): View {
-                val view  = LayoutInflater.from(this@MainActivity).inflate(R.layout.txtlayout,parent,false)
+                val view = LayoutInflater.from(this@MainActivity)
+                    .inflate(R.layout.txtlayout, parent, false)
                 view.text_textLayout.text = data[position]
+                view.setOnClickListener {
+                    url = "https://widget.cifuwu.com/weather/?city=${view.text_textLayout.text}"
+                    getMessage()
+                    drawerLayout.closeDrawer(GravityCompat.START)
+                }
                 return view
             }
         }
         group_main.setAdapter(adapter)
-        getMessage()
+        val db = dbHelper.writableDatabase
+        val cursor = db.query("cityName", null, null, null, null, null, null)
+        while (cursor.moveToNext()) {
+            val cityName = cursor.getString(cursor.getColumnIndex("city_name"))
+            txtList.add(cityName)
+            adapter.change(txtList)
+            group_main.dataChange()
+        }
+        cursor.close()
         edText_main.setOnEditorActionListener { _, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_SEND || (event != null && event.keyCode == KeyEvent.KEYCODE_ENTER)) {
                 url = "https://widget.cifuwu.com/weather/?city=${edText_main.text}"
+                val value = contentValuesOf(
+                    "city_name" to edText_main.text.toString()
+                )
+                db.delete("cityName", "city_name=?", arrayOf(edText_main.text.toString()))
+                db.insert("cityName", null, value)
                 txtList.add(edText_main.text.toString())
                 adapter.change(txtList)
                 group_main.dataChange()
@@ -77,7 +101,8 @@ class MainActivity : AppCompatActivity() {
                 drawerLayout.openDrawer(GravityCompat.START)
             }
             R.id.administration -> {
-
+                val intentObj = Intent(this, ManageCityActivity::class.java)
+                startActivity(intentObj)
             }
         }
         return true
@@ -296,6 +321,26 @@ class MainActivity : AppCompatActivity() {
                     holder.itemView.max_days.text = daysList[position].max
                 }.create()
             daysRec_main.layoutManager = MyLayoutManager(this, LinearLayoutManager.VERTICAL, false)
+            life1.setStyle { img, txt1, txt2 ->
+                img.setImageResource(R.drawable.ic_coldrisk)
+                txt1.text = "感冒"
+                txt2.text = it.data.life.info.ganmao[0]
+            }
+            life2.setStyle { img, txt1, txt2 ->
+                img.setImageResource(R.drawable.ic_dressing)
+                txt1.text = "穿衣"
+                txt2.text = it.data.life.info.chuanyi[0]
+            }
+            life3.setStyle { img, txt1, txt2 ->
+                img.setImageResource(R.drawable.ic_ultraviolet)
+                txt1.text = "紫外线"
+                txt2.text = it.data.life.info.ziwaixian[0]
+            }
+            life4.setStyle { img, txt1, txt2 ->
+                img.setImageResource(R.drawable.ic_carwashing)
+                txt1.text = "洗车"
+                txt2.text = it.data.life.info.xiche[0]
+            }
         }
     }
 
