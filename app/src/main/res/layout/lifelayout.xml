@@ -27,7 +27,7 @@
         <TextView
             android:id="@+id/ganmaoMessage"
             android:text="易发"
-            android:textSize="18sp"
+            android:textSize="15sp"
             android:gravity="center"
             app:layout_constraintTop_toBottomOf="@+id/ganmao"
             app:layout_constraintLeft_toLeftOf="parent"

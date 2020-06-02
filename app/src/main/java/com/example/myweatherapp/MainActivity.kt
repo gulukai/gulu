@@ -1,5 +1,6 @@
 package com.example.myweatherapp
 
+import android.app.Activity
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -102,7 +103,8 @@ class MainActivity : AppCompatActivity() {
             }
             R.id.administration -> {
                 val intentObj = Intent(this, ManageCityActivity::class.java)
-                startActivity(intentObj)
+//                startActivity(intentObj)
+                startActivityForResult(intentObj,1)
             }
         }
         return true
@@ -375,5 +377,21 @@ class MainActivity : AppCompatActivity() {
             week += "星期六"
         }
         return week
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        val ralData = data?.extras
+        when(requestCode){
+            1->{
+                when (resultCode) {
+                    Activity.RESULT_OK -> {
+                        val getData = ralData?.getString("city_name")
+                        url = "https://widget.cifuwu.com/weather/?city=${getData}"
+                        getMessage()
+                    }
+                }
+            }
+        }
     }
 }
